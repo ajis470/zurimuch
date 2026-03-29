@@ -89,3 +89,21 @@
 - [2026-03-28] CLAUDE.mdをGitHubリポジトリ（zurimuch）にpushしてバックアップ体制を確立。
 - [2026-03-28] GitHubは「履歴がわかるGoogleドライブ」として運用。機能実装のたびにcommit+pushする方針。
 - [2026-03-28] フロントエンド（zurimuch/）はNext.jsデフォルト状態のまま。次フェーズで実装予定。
+- [2026-03-30] Qdrantデータ状況を確認。コレクション`faces`に8,925件登録済み。うちスペック（height/cup/est_bmi）が全て揃っているのは2,513件（約28%）。残りはDMM API未提供の古い女優が中心。
+- [2026-03-30] NULLデータ女優の扱いを確定：**DBには残し、検索クエリのフィルタで除外**（Aパターン）。削除しない理由：dmm_auto_sync.pyが次回実行時に再登録されるため。
+- [2026-03-30] フロントエンドMVP実装完了。作成ファイル：`app/page.tsx`（検索UI）・`app/api/search/route.ts`（名前検索）・`app/api/similar/route.ts`（類似検索・スライダー重み付き）。
+- [2026-03-30] 名前検索のためQdrantの`name`フィールドにmultilingualフルテキストインデックスを作成。日本語部分一致検索が有効。
+- [2026-03-30] 重複登録（同一actress_idが複数ポイント存在）をAPIレイヤーでactress_id重複排除で対応。
+- [2026-03-30] 類似検索のスコアリング方式：顔（ベクトルコサイン類似度）＋身長（±20cm範囲）＋カップ（±3段階）＋スタイル（est_bmi ±5）の加重平均。スライダーの値が重みになる。
+- [2026-03-30] SEO方針を議論・確定：現状のSPA構造ではクローラーにコンテンツが見えないため、次フェーズで`/actress/[actress_id]`ページ（ISR）＋`sitemap.ts`を実装する方針。「{女優名} 似てる 女優」等の検索流入を狙う。
+
+## 4-4. フロントエンド実装済みファイル（2026-03-30時点）
+- `app/page.tsx`: メインUI（'use client'）。女優名検索→タップ→類似女優表示。スライダー（顔タイプ/身長/カップ/スタイル）でmouseup時に再検索。
+- `app/api/search/route.ts`: GET `/api/search?q=`. Qdrantフルテキスト検索。actress_id重複排除。
+- `app/api/similar/route.ts`: GET `/api/similar?id=&face=&height=&cup=&bmi=`. スペックあり女優のみ対象（height≥1 & cup≥1 & est_bmi≥1）。候補100件取得→重み付きスコア再ランキング→上位20件返却。
+- `app/layout.tsx`: タイトル「zurimuch」・description更新済み。
+
+## 5-2. 次フェーズ予定（SEO対応）
+- `/actress/[actress_id]/page.tsx`（ISR, revalidate=86400）: 女優個別ページ。generateMetadataで「{名前} に似た女優」タイトル。類似女優をサーバーサイドレンダリング。
+- `app/sitemap.ts`: スペック有り2,513件をQdrantから取得してサイトマップ生成。
+- `/search/page.tsx`（SSR）: URLパラメータ化（?q=）による検索結果ページ。シェア可能なURL。
