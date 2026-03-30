@@ -5,6 +5,9 @@ import SimilarSection from './SimilarSection';
 const QDRANT_URL = 'http://133.18.180.166:6333';
 const CUP = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
 
+const toHttps = (url: string | null) =>
+  url ? url.replace(/^http:\/\//, 'https://') : null;
+
 export const revalidate = 86400; // 24時間ISR
 
 // ---- 型 ----------------------------------------------------------------
@@ -139,7 +142,7 @@ export default async function ActressPage({
             <div className="shrink-0 w-16 h-16 rounded-full overflow-hidden bg-gray-100">
               {p.image_url ? (
                 <img
-                  src={p.image_url}
+                  src={toHttps(p.image_url)!}
                   alt={p.name}
                   className="w-full h-full object-cover object-top"
                 />

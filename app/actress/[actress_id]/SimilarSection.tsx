@@ -5,6 +5,9 @@ import Link from 'next/link';
 
 const CUP = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
 
+const toHttps = (url: string | null) =>
+  url ? url.replace(/^http:\/\//, 'https://') : null;
+
 type ScoredPoint = {
   id: string;
   score: number;
@@ -64,7 +67,7 @@ function SimilarCard({ actress }: { actress: ScoredPoint }) {
         >
           {p.image_url ? (
             <img
-              src={p.image_url}
+              src={toHttps(p.image_url)!}
               alt={p.name}
               className="w-full h-full object-cover object-top"
             />
