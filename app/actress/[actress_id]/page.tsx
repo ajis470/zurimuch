@@ -16,6 +16,7 @@ type ActressPayload = {
   cup: number | null;
   est_bmi: number | null;
   url: string;
+  image_url: string | null;
 };
 
 type QdrantPoint = {
@@ -133,13 +134,33 @@ export default async function ActressPage({
       <div className="max-w-lg mx-auto px-4 py-6">
         {/* 女優情報カード */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6 shadow-sm">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">{p.name}</h1>
-
-          {/* スペックバッジ */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {p.height && <SpecBadge label="身長" value={`${p.height}cm`} />}
-            {p.cup     ? <SpecBadge label="カップ" value={`${CUP[p.cup]}カップ`} /> : null}
-            {p.est_bmi && <SpecBadge label="想定BMI" value={p.est_bmi.toFixed(1)} />}
+          <div className="flex items-center gap-4 mb-4">
+            {/* 顔写真 */}
+            <div className="shrink-0 w-16 h-16 rounded-full overflow-hidden bg-gray-100">
+              {p.image_url ? (
+                <img
+                  src={p.image_url}
+                  alt={p.name}
+                  className="w-full h-full object-cover object-top"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                  <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
+                    <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">{p.name}</h1>
+              {/* スペックバッジ */}
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {p.height && <SpecBadge label="身長" value={`${p.height}cm`} />}
+                {p.cup     ? <SpecBadge label="カップ" value={`${CUP[p.cup]}カップ`} /> : null}
+                {p.est_bmi && <SpecBadge label="想定BMI" value={p.est_bmi.toFixed(1)} />}
+              </div>
+            </div>
           </div>
 
           {/* DMMリンク */}

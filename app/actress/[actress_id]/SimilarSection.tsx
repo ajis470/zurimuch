@@ -15,6 +15,7 @@ type ScoredPoint = {
     cup: number | null;
     est_bmi: number | null;
     url: string;
+    image_url: string | null;
   };
 };
 
@@ -58,10 +59,20 @@ function SimilarCard({ actress }: { actress: ScoredPoint }) {
           href={p.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 w-9 h-9 rounded-full bg-gray-100 hover:bg-rose-100 text-gray-400 hover:text-rose-500 flex items-center justify-center transition-colors"
+          className="shrink-0 w-10 h-10 rounded-full bg-gray-100 hover:opacity-80 overflow-hidden flex items-center justify-center transition-opacity"
           title="DMMで作品を見る"
         >
-          <FaceIcon />
+          {p.image_url ? (
+            <img
+              src={p.image_url}
+              alt={p.name}
+              className="w-full h-full object-cover object-top"
+            />
+          ) : (
+            <span className="text-gray-400 hover:text-rose-500 transition-colors">
+              <FaceIcon />
+            </span>
+          )}
         </a>
         <div className="min-w-0">
           <div className="font-medium text-sm text-gray-900 leading-snug truncate">
