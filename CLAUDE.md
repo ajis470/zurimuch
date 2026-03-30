@@ -98,12 +98,25 @@
 - [2026-03-30] SEO方針を議論・確定：現状のSPA構造ではクローラーにコンテンツが見えないため、次フェーズで`/actress/[actress_id]`ページ（ISR）＋`sitemap.ts`を実装する方針。「{女優名} 似てる 女優」等の検索流入を狙う。
 
 ## 4-4. フロントエンド実装済みファイル（2026-03-30時点）
-- `app/page.tsx`: メインUI（'use client'）。女優名検索→タップ→類似女優表示。スライダー（顔タイプ/身長/カップ/スタイル）でmouseup時に再検索。
+- `app/page.tsx`: メインUI（'use client'）。女優名検索→タップ→類似女優表示。スライダー（顔タイプ/身長/カップ/スタイル）でmouseup時に再検索。白ベースデザイン。
 - `app/api/search/route.ts`: GET `/api/search?q=`. Qdrantフルテキスト検索。actress_id重複排除。
 - `app/api/similar/route.ts`: GET `/api/similar?id=&face=&height=&cup=&bmi=`. スペックあり女優のみ対象（height≥1 & cup≥1 & est_bmi≥1）。候補100件取得→重み付きスコア再ランキング→上位20件返却。
 - `app/layout.tsx`: タイトル「zurimuch」・description更新済み。
+- `app/actress/[actress_id]/page.tsx`: ISRサーバーコンポーネント（revalidate=86400）。generateMetadata対応。顔写真・スペックバッジ・DMMリンク表示。類似女優をSSRで初期レンダリング（SEO対応）。
+- `app/actress/[actress_id]/SimilarSection.tsx`: クライアントコンポーネント。類似女優カードに顔アイコン（→DMMアフィリリンク）＋「この女優に似た女優を探す」（→女優個別ページ）。スライダーでmouseup時に再検索。
+
+## 4-5. Pythonスクリプト（VPS: 133.18.180.166）
+- `dmm_auto_sync.py`: image_urlをpayloadに保存するよう修正済み（2026-03-30）。次回実行から反映。
+- `backfill_images.py`: 既存8,925件にimage_urlを補完するスクリプト。VPS上で `python backfill_images.py` を実行。約20〜25分で完了見込み。
+- **VPSログイン**: `ssh root@133.18.180.166`（パスワード認証）
+- **スクリプトパス**: 未確認（要 `find / -name "dmm_auto_sync.py" 2>/dev/null` で確認）
 
 ## 5-2. 次フェーズ予定（SEO対応）
-- `/actress/[actress_id]/page.tsx`（ISR, revalidate=86400）: 女優個別ページ。generateMetadataで「{名前} に似た女優」タイトル。類似女優をサーバーサイドレンダリング。
 - `app/sitemap.ts`: スペック有り2,513件をQdrantから取得してサイトマップ生成。
 - `/search/page.tsx`（SSR）: URLパラメータ化（?q=）による検索結果ページ。シェア可能なURL。
+
+- [2026-03-30] デザインを白ベース（gray-50背景・rose-500アクセント）にリニューアル。ダークモード無効化。
+- [2026-03-30] 個別女優ページ（/actress/[actress_id]）実装。ISR・generateMetadata・類似女優SSR対応。
+- [2026-03-30] 個別ページの類似女優カードに顔アイコン（DMMリンク）＋「この女優に似た女優を探す」リンクを実装。
+- [2026-03-30] image_urlをQdrantのpayloadに保存する設計に変更。dmm_auto_sync.py修正＋backfill_images.py作成。
+- [2026-03-30] VPSへのSSH接続方法を確認：`ssh root@133.18.180.166`（パスワード認証）。backfill実行前にスクリプトパスの確認が必要。
