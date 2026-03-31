@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
 
 const CUP = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
 
@@ -61,23 +62,36 @@ function ActressCard({
     </div>
   );
 
-  const base =
-    'p-3 rounded-2xl border text-left transition-all block w-full';
-  const style = selected
-    ? `${base} border-rose-400 bg-rose-50 shadow-sm`
-    : `${base} border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm`;
+  const cardStyle = selected
+    ? 'bg-rose-50 border-rose-400 shadow-sm'
+    : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm';
 
   if (href) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={style}>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`p-3 rounded-2xl border text-left transition-all block w-full ${cardStyle}`}
+      >
         {inner}
       </a>
     );
   }
+
   return (
-    <button onClick={onClick} className={style}>
-      {inner}
-    </button>
+    <div className={`p-3 rounded-2xl border transition-all ${cardStyle}`}>
+      <button onClick={onClick} className="w-full text-left mb-2">
+        {inner}
+      </button>
+      <Link
+        href={`/actress/${p.actress_id}`}
+        className="text-xs text-rose-500 hover:text-rose-400 font-medium flex items-center gap-1 transition-colors"
+      >
+        この女優に似た女優を探す
+        <span aria-hidden>→</span>
+      </Link>
+    </div>
   );
 }
 
