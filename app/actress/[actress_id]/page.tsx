@@ -52,7 +52,7 @@ async function fetchActressByDmmId(actress_id: string): Promise<QdrantPoint | nu
   return data.result?.points?.[0] ?? null;
 }
 
-async function fetchSimilar(pointId: string, vector: number[]): Promise<ScoredPoint[]> {
+async function fetchSimilar(pointId: string, actressId: string, vector: number[]): Promise<ScoredPoint[]> {
   const res = await fetch(`${QDRANT_URL}/collections/faces/points/search`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -64,7 +64,10 @@ async function fetchSimilar(pointId: string, vector: number[]): Promise<ScoredPo
           { key: 'cup',     range: { gte: 1 } },
           { key: 'est_bmi', range: { gte: 1 } },
         ],
-        must_not: [{ has_id: [pointId] }],
+        must_not: [
+          { has_id: [pointId] },
+          { key: 'actress_id', match: { value: actressId } },
+        ],
       },
       limit: 20,
       with_payload: true,
@@ -121,7 +124,7 @@ export default async function ActressPage({
   if (!point) notFound();
 
   const p = point.payload;
-  const initialSimilar = await fetchSimilar(point.id, point.vector);
+  const initialSimilar = await fetchSimilar(point.id, p.actress_id, point.vector);
 
   return (
     <div className="min-h-screen bg-gray-50">
