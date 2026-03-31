@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   const tp = target.payload as ActressPayload;
 
-  // 2. ベクトル検索（スペックが揃っている女優のみ）
+  // 2. ベクトル検索（スペックが揃っている女優のみ・候補を500件に拡大）
   const searchRes = await fetch(`${QDRANT_URL}/collections/faces/points/search`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         ],
         must_not: [{ has_id: [pointId] }],
       },
-      limit: 100,
+      limit: 500,
       with_payload: true,
       with_vector: false,
     }),
@@ -60,19 +60,27 @@ export async function GET(request: NextRequest) {
   });
 
   // 4. 重み付きスコアで再ランキング
-  const totalWeight = wFace + wHeight + wCup + wBmi;
-
+  // nullの軸は分子・分母両方から除外（スコアを不当に下げない）
   const scored = unique.map((c) => {
     const cp = c.payload;
-    const faceSim   = c.score; // コサイン類似度 0〜1
-    const heightSim = tp.height && cp.height ? scalarSim(tp.height, cp.height, 20) : 0;
-    const cupSim    = tp.cup    && cp.cup    ? scalarSim(tp.cup,    cp.cup,    3)  : 0;
-    const bmiSim    = tp.est_bmi && cp.est_bmi ? scalarSim(tp.est_bmi, cp.est_bmi, 5) : 0;
 
-    const score = totalWeight > 0
-      ? (wFace * faceSim + wHeight * heightSim + wCup * cupSim + wBmi * bmiSim) / totalWeight
-      : faceSim;
+    let totalW = wFace;
+    let totalScore = wFace * c.score;
 
+    if (tp.height && cp.height) {
+      totalW     += wHeight;
+      totalScore += wHeight * scalarSim(tp.height, cp.height, 20);
+    }
+    if (tp.cup && cp.cup) {
+      totalW     += wCup;
+      totalScore += wCup * scalarSim(tp.cup, cp.cup, 3);
+    }
+    if (tp.est_bmi && cp.est_bmi) {
+      totalW     += wBmi;
+      totalScore += wBmi * scalarSim(tp.est_bmi, cp.est_bmi, 5);
+    }
+
+    const score = totalW > 0 ? totalScore / totalW : c.score;
     return { ...c, score };
   });
 
@@ -88,6 +96,7 @@ type ActressPayload = {
   cup: number | null;
   est_bmi: number | null;
   url: string;
+  image_url: string | null;
 };
 
 type QdrantScoredPoint = {
