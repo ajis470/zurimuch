@@ -39,7 +39,10 @@ export async function GET(request: NextRequest) {
           { key: 'cup',     range: { gte: 1 } },
           { key: 'est_bmi', range: { gte: 1 } },
         ],
-        must_not: [{ has_id: [pointId] }],
+        must_not: [
+          { has_id: [pointId] },
+          { key: 'actress_id', match: { value: tp.actress_id } },
+        ],
       },
       limit: 2513,
       with_payload: true,
