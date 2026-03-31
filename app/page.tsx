@@ -5,6 +5,9 @@ import Link from 'next/link';
 
 const CUP = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
 
+const toHttps = (url: string | null) =>
+  url ? url.replace(/^http:\/\//, 'https://') : null;
+
 type Actress = {
   id: string;
   score?: number;
@@ -15,6 +18,7 @@ type Actress = {
     cup: number | null;
     est_bmi: number | null;
     url: string;
+    image_url: string | null;
   };
 };
 
@@ -47,18 +51,30 @@ function ActressCard({
     .join(' · ');
 
   const inner = (
-    <div className="flex flex-col gap-0.5">
-      <span className="font-medium text-sm text-gray-900 leading-snug">
-        {p.name}
-      </span>
-      {specs && (
-        <span className="text-xs text-gray-400">{specs}</span>
-      )}
-      {actress.score !== undefined && (
-        <span className="inline-block mt-1 text-xs font-medium text-rose-500">
-          {(actress.score * 100).toFixed(0)}% 一致
-        </span>
-      )}
+    <div className="flex items-start gap-2.5">
+      <div className="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+        {p.image_url ? (
+          <img
+            src={toHttps(p.image_url)!}
+            alt={p.name}
+            className="w-full h-full object-cover object-top"
+          />
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-gray-300" aria-hidden>
+            <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        )}
+      </div>
+      <div className="min-w-0 flex flex-col gap-0.5">
+        <span className="font-medium text-sm text-gray-900 leading-snug truncate">{p.name}</span>
+        {specs && <span className="text-xs text-gray-400">{specs}</span>}
+        {actress.score !== undefined && (
+          <span className="text-xs font-medium text-rose-500">
+            {(actress.score * 100).toFixed(0)}% 一致
+          </span>
+        )}
+      </div>
     </div>
   );
 
