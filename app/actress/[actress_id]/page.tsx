@@ -79,12 +79,16 @@ async function fetchSimilar(pointId: string, actressId: string, vector: number[]
 
   // actress_idで重複排除
   const seen = new Set<string>();
-  return (data.result ?? []).filter((p: ScoredPoint) => {
+  const results: ScoredPoint[] = (data.result ?? []).filter((p: ScoredPoint) => {
     const id = p.payload.actress_id;
     if (seen.has(id)) return false;
     seen.add(id);
     return true;
   });
+
+  // トップ結果を100%に正規化
+  const maxScore = results[0]?.score ?? 1;
+  return results.map(p => ({ ...p, score: p.score / maxScore }));
 }
 
 // ---- Metadata ----------------------------------------------------------
