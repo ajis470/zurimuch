@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         ],
         must_not: [{ has_id: [pointId] }],
       },
-      limit: 500,
+      limit: 2513,
       with_payload: true,
       with_vector: false,
     }),
@@ -86,7 +86,12 @@ export async function GET(request: NextRequest) {
 
   scored.sort((a, b) => b.score - a.score);
 
-  return Response.json({ results: scored.slice(0, 20) });
+  // トップ結果を100%に正規化
+  const top20 = scored.slice(0, 20);
+  const maxScore = top20[0]?.score ?? 1;
+  const normalized = top20.map(s => ({ ...s, score: s.score / maxScore }));
+
+  return Response.json({ results: normalized });
 }
 
 type ActressPayload = {
