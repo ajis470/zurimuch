@@ -147,3 +147,14 @@
 - [2026-04-04] sitemap.ts作成：Qdrantからスペックあり女優全件取得してsitemap.xml生成（revalidate=86400）。
 - [2026-04-04] robots.ts作成：AmazonBotをブロック、他クローラー全許可。
 - [2026-04-04] AmazonBotブロック方針：うるさいためrobots.tsでdisallow。BingBotは許可（流入は少ないが残す）。
+- [2026-04-04] 体型解析ライブラリ：MediaPipe Poseを採用確定。VPS内ローカル実行のため画像が外部送信されない。Apache 2.0ライセンスで商用利用OK。全身骨格33点から肩幅・腰幅比率を算出してest_bmi補正値として保存する方針。
+- [2026-04-04] 画像取得・解析方針（確定）：
+  - **顔ベクトル精度向上**：パッケージ画像（imageURL.large）を使用。複数作品分のベクトルを平均化してQdrantのvectorを上書き。
+  - **肉付きスコア精度向上**：スクリーンショット（sampleImageURL.sample_l.image）＋MediaPipe Poseで体型解析。est_bmi補正値として保存。
+  - **単体作品フィルタ（絶対条件）**：ItemList APIレスポンスのactress配列が1人のみの作品だけを使用。複数出演作品は精度を下げるため完全スキップ。ベスト盤は単体扱いでも古い画像が混じる可能性があるが許容。
+  - **鮮度ロジック**：last_date > enriched_atの場合のみ再解析（新作が出た現役女優を優先）。引退女優は初回解析後固定。
+  - **APIコール最小化**：1女優あたりItemList 1コール（最新作品を新しい順3件取得）。単体作品のみ画像ダウンロード→解析後に画像は破棄、URLと解析結果のみQdrantに保存。
+  - **実行**：backend_enrich.pyに組み込み、毎日深夜4時cronでチビチビ処理。
+- [2026-04-04] backend_enrich.py Phase2実装完了。MediaPipe 0.10系はsolutions廃止→Tasks API（PoseLandmarker）に対応。モデルファイル（pose_landmarker_lite.task）をVPSに配置済み。
+- [2026-04-04] iteminfo.actressフィールドで単体作品フィルタ実装。actress配列が1人のみの作品だけ画像解析対象とする。
+- [2026-04-04] 体型スコア動作確認（桜空もも: 0.436）。顔ベクトル更新はパッケージ画像より女優プロフィール画像の方が精度高い可能性あり（今後検討）。IMAGE_DAILY_LIMIT=50件/日でcron処理中。
