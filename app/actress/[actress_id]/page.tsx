@@ -111,8 +111,8 @@ export async function generateMetadata({
     .join('・');
 
   return {
-    title: `${p.name} に似た女優 | zurimuch`,
-    description: `${p.name}${specs ? `（${specs}）` : ''}に顔・スタイルが似たAV女優を紹介します`,
+    title: { absolute: `${p.name}に近いAV女優を直感操作で簡単マッチング｜オカズマッチ` },
+    description: `${p.name}が好きならこの子も好きなはず！直感操作で顔・身長・カップ・肉付き等の重要ポイントを貴方好みに配分してマッチ可能！今夜のオカズ探しに最適！`,
   };
 }
 
@@ -136,7 +136,7 @@ export default async function ActressPage({
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-4">
           <Link href="/" className="text-xl font-bold tracking-tight text-gray-900">
-            zuri<span className="text-rose-500">much</span>
+            オカズ<span className="text-rose-500">マッチ</span>
           </Link>
         </div>
       </header>

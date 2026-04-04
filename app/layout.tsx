@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "zurimuch",
-  description: "好みの女優を選んで、似た女優を探す",
+  title: {
+    default: "オカズマッチ｜好きなタイプのAV女優を直感的にマッチング",
+    template: "%s | オカズマッチ",
+  },
+  description: "簡単直感操作！今自分が好きなAV女優から顔・身長・カップ・肉付き等の重視するポイントを直感的に操作して探している「タイプ」の女優をAIがマッチング。今夜の「オカズ」や新しい「推し」が今すぐ見つかります。",
+  metadataBase: new URL("https://zurimuch.com"),
+  openGraph: {
+    siteName: "zurimuch",
+    locale: "ja_JP",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -24,10 +34,24 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-433P4LPWEB"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-433P4LPWEB');
+          `}
+        </Script>
+      </body>
     </html>
   );
 }

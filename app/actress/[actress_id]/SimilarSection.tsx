@@ -28,7 +28,7 @@ const SLIDER_LABELS: Record<keyof Weights, string> = {
   face: '顔タイプ',
   height: '身長',
   cup: 'カップ',
-  bmi: 'スタイル',
+  bmi: '肉付き',
 };
 
 function FaceIcon() {
@@ -58,12 +58,9 @@ function SimilarCard({ actress }: { actress: ScoredPoint }) {
     <div className="bg-white rounded-2xl border border-gray-200 p-3 flex flex-col gap-2 hover:shadow-sm transition-shadow">
       {/* 顔アイコン（DMM）＋名前・スペック */}
       <div className="flex items-start gap-2.5">
-        <a
-          href={p.url}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href={`/actress/${p.actress_id}`}
           className="shrink-0 w-10 h-10 rounded-full bg-gray-100 hover:opacity-80 overflow-hidden flex items-center justify-center transition-opacity"
-          title="DMMで作品を見る"
         >
           {p.image_url ? (
             <img
@@ -76,7 +73,7 @@ function SimilarCard({ actress }: { actress: ScoredPoint }) {
               <FaceIcon />
             </span>
           )}
-        </a>
+        </Link>
         <div className="min-w-0">
           <div className="font-medium text-sm text-gray-900 leading-snug truncate">
             {p.name}
@@ -85,19 +82,21 @@ function SimilarCard({ actress }: { actress: ScoredPoint }) {
             <div className="text-xs text-gray-400 mt-0.5">{specs}</div>
           )}
           <div className="text-xs font-medium text-rose-400 mt-0.5">
-            {(actress.score * 100).toFixed(0)}% 一致
+            一致率：{(actress.score * 100).toFixed(1)}%
           </div>
         </div>
       </div>
 
-      {/* 女優ページへのリンク */}
-      <Link
-        href={`/actress/${p.actress_id}`}
-        className="text-xs text-rose-500 hover:text-rose-400 font-medium flex items-center gap-1 transition-colors"
+      {/* DMMリンク */}
+      <a
+        href={p.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-rose-500 hover:text-rose-400 font-medium flex items-center justify-center gap-1 transition-colors"
       >
-        この女優に似た女優を探す
+        この女優の作品を探す
         <span aria-hidden>→</span>
-      </Link>
+      </a>
     </div>
   );
 }
@@ -152,6 +151,12 @@ export default function SimilarSection({
           重み調整
         </p>
         <div className="space-y-3">
+          <div className="flex items-center pl-[3.75rem] pr-[1.75rem] mb-2">
+            <div className="relative flex-1 h-5 rounded-full bg-gradient-to-r from-rose-100 to-rose-500 flex items-center justify-between px-2">
+              <span className="text-xs font-bold text-rose-400">← 軽視</span>
+              <span className="text-xs font-bold text-white drop-shadow-sm">重視 →</span>
+            </div>
+          </div>
           {(Object.keys(SLIDER_LABELS) as (keyof Weights)[]).map((key) => (
             <div key={key} className="flex items-center gap-3">
               <span className="text-xs text-gray-500 w-14 shrink-0">
@@ -165,7 +170,8 @@ export default function SimilarSection({
                 onChange={(e) => handleSliderChange(key, Number(e.target.value))}
                 onMouseUp={handleSliderCommit}
                 onTouchEnd={handleSliderCommit}
-                className="flex-1 accent-rose-500 cursor-pointer"
+                className="flex-1 cursor-pointer"
+                style={{ '--fill': `${weights[key]}%` } as React.CSSProperties}
               />
               <span className="text-xs text-gray-400 w-6 text-right tabular-nums">
                 {weights[key]}

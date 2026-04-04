@@ -66,7 +66,7 @@
   - `app.py`: スライダー検索UI（未作成）
   - `CLAUDE.md`: 本「全史」
   - `.env`: APIキー管理（公開禁止）
-    - `DMM_API_ID` / `DMM_AFFILIATE_ID`（ajis470-991）= API取得専用ID（確定）
+    - `DMM_API_ID`（hEfLm55PcMVGuAFSVKvt） / `DMM_AFFILIATE_ID`（ajis470-991）= API取得専用ID（確定）
     - ユーザー向けリンク用IDは未発行。ドメイン取得・フロントエンド完成後にDMMへサイト追加申請し、新アフィリエイトID（恐らくajis470-003）を取得する必要がある。
 
 ## 4-3. Git・インフラ管理
@@ -98,18 +98,20 @@
 - [2026-03-30] SEO方針を議論・確定：現状のSPA構造ではクローラーにコンテンツが見えないため、次フェーズで`/actress/[actress_id]`ページ（ISR）＋`sitemap.ts`を実装する方針。「{女優名} 似てる 女優」等の検索流入を狙う。
 
 ## 4-4. フロントエンド実装済みファイル（2026-03-30時点）
-- `app/page.tsx`: メインUI（'use client'）。女優名検索→タップ→類似女優表示。スライダー（顔タイプ/身長/カップ/スタイル）でmouseup時に再検索。白ベースデザイン。
-- `app/api/search/route.ts`: GET `/api/search?q=`. Qdrantフルテキスト検索。actress_id重複排除。
+- `app/page.tsx`: メインUI（'use client'）。女優名検索→タップ→類似女優表示。スライダー（顔タイプ/身長/カップ/スタイル）でmouseup時に再検索。白ベースデザイン。検索結果カードに顔写真（丸アイコン）表示、画像なしはSVGフォールバック（2026-03-31）。
+- `app/api/search/route.ts`: GET `/api/search?q=`. ~~Qdrantフルテキスト検索~~ → 全件スキャン（1,000件ずつページング）＋JS側`name.includes(q)`に変更（2026-03-31）。漢字/かな境界問題を解消。actress_id重複排除。
 - `app/api/similar/route.ts`: GET `/api/similar?id=&face=&height=&cup=&bmi=`. スペックあり女優のみ対象（height≥1 & cup≥1 & est_bmi≥1）。候補100件取得→重み付きスコア再ランキング→上位20件返却。
 - `app/layout.tsx`: タイトル「zurimuch」・description更新済み。
 - `app/actress/[actress_id]/page.tsx`: ISRサーバーコンポーネント（revalidate=86400）。generateMetadata対応。顔写真・スペックバッジ・DMMリンク表示。類似女優をSSRで初期レンダリング（SEO対応）。
 - `app/actress/[actress_id]/SimilarSection.tsx`: クライアントコンポーネント。類似女優カードに顔アイコン（→DMMアフィリリンク）＋「この女優に似た女優を探す」（→女優個別ページ）。スライダーでmouseup時に再検索。
 
 ## 4-5. Pythonスクリプト（VPS: 133.18.180.166）
-- `dmm_auto_sync.py`: image_urlをpayloadに保存するよう修正済み（2026-03-30）。次回実行から反映。
-- `backfill_images.py`: 既存8,925件にimage_urlを補完するスクリプト。VPS上で `python backfill_images.py` を実行。約20〜25分で完了見込み。
-- **VPSログイン**: `ssh root@133.18.180.166`（パスワード認証）
-- **スクリプトパス**: 未確認（要 `find / -name "dmm_auto_sync.py" 2>/dev/null` で確認）
+- `dmm_auto_sync.py`: image_urlをpayloadに保存するよう修正済み（2026-03-30）。顔検出改善（2026-04-02）：det_size=(320,320)・det_thresh=0.3・300px未満画像を6倍拡大して検出精度向上。
+- `backfill_images.py`: 既存8,925件にimage_urlを補完するスクリプト。実行済み（2026-04-01）。登録=0・スキップ=59,969（全件すでに登録済みまたは画像なし）。
+- `register_ichika.py`: 松本いちか（actress_id=1054998）を手動登録するために作成したスクリプト（2026-04-02）。同様の手動登録が必要な場合の参考用として保持。
+- **VPSログイン**: `ssh root@133.18.180.166`（パスワード認証: `Kagoya1650++`）/ Claude Codeからは鍵認証（`~/.ssh/id_ed25519`）で接続可能（2026-04-02設定）
+- **スクリプトパス**: `/root/ai-matching/`
+- **進捗ログ**: `tail -f /root/ai-matching/dmm_sync.log`
 
 ## 5-2. 次フェーズ予定（SEO対応）
 - `app/sitemap.ts`: スペック有り2,513件をQdrantから取得してサイトマップ生成。
@@ -120,3 +122,11 @@
 - [2026-03-30] 個別ページの類似女優カードに顔アイコン（DMMリンク）＋「この女優に似た女優を探す」リンクを実装。
 - [2026-03-30] image_urlをQdrantのpayloadに保存する設計に変更。dmm_auto_sync.py修正＋backfill_images.py作成。
 - [2026-03-30] VPSへのSSH接続方法を確認：`ssh root@133.18.180.166`（パスワード認証）。backfill実行前にスクリプトパスの確認が必要。
+- [2026-03-31] 日本語名前検索バグ修正：「霧島」で「霧島さくら」が出ない問題。Qdrant multilingualインデックスが漢字/かな境界でトークン分割するのが原因。全件スキャン＋JS includes()方式に切り替えて解消。
+- [2026-03-31] TOPページ検索結果カードに顔写真（丸アイコン）を追加。SimilarSectionと同じデザイン。
+- [2026-03-31] **デプロイ方針変更**：Vercelのコスト管理のため、こまめなpushは禁止。ローカルで複数変更をまとめてビルド確認→ユーザーが「デプロイしよう」と指示したタイミングでまとめてgit push 1回。
+- [2026-04-02] dmm_auto_sync.pyを全件実行（約1日）→登録=0・スキップ=59,969。全件スキップの原因：登録済み（8,925件）＋画像なし・顔未検出（残り約51,000件）。
+- [2026-04-02] 松本いちか（actress_id=1054998）がDBに未登録と判明。DMMのプロフィール画像が125×125pxと極小のためInsightFaceが顔未検出でスキップしていた。
+- [2026-04-02] 対策：画像を6倍拡大（750×750px）＋det_thresh=0.3・det_size=(320,320)で顔検出成功。松本いちかをQdrantに登録済み（身長153cm・C・想定BMI23.5）。
+- [2026-04-02] dmm_auto_sync.pyに同対策を反映（小さい画像の女優を今後取りこぼさないよう）。VPSで再実行中（`/root/ai-matching/dmm_sync.log`で進捗確認可）。
+- [2026-04-02] Claude CodeからVPSへのSSH鍵認証を設定。`~/.ssh/id_ed25519`でパスワード不要でSSH・SCP可能になった。
