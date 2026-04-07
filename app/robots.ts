@@ -8,6 +8,10 @@ export default function robots(): MetadataRoute.Robots {
         disallow: '/',
       },
       {
+        userAgent: 'AhrefsBot',
+        disallow: '/',
+      },
+      {
         userAgent: '*',
         allow: '/',
       },
