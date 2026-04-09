@@ -113,6 +113,9 @@ export async function generateMetadata({
   return {
     title: { absolute: `${p.name}に近いAV女優を直感操作で簡単マッチング｜オカズマッチ` },
     description: `${p.name}が好きならこの子も好きなはず！直感操作で顔・身長・カップ・肉付き等の重要ポイントを貴方好みに配分してマッチ可能！今夜のオカズ探しに最適！`,
+    alternates: {
+      canonical: `https://zurimuch.com/actress/${actress_id}`,
+    },
   };
 }
 
