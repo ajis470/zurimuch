@@ -17,44 +17,48 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let nextOffset: string | null = null;
   const seen = new Set<string>();
 
-  do {
-    const body: Record<string, unknown> = {
-      filter: {
-        must: [
-          { key: 'height',  range: { gte: 1 } },
-          { key: 'cup',     range: { gte: 1 } },
-          { key: 'est_bmi', range: { gte: 1 } },
-        ],
-      },
-      limit: 250,
-      with_payload: true,
-      with_vector: false,
-    };
-    if (nextOffset) body.offset = nextOffset;
+  try {
+    do {
+      const body: Record<string, unknown> = {
+        filter: {
+          must: [
+            { key: 'height',  range: { gte: 1 } },
+            { key: 'cup',     range: { gte: 1 } },
+            { key: 'est_bmi', range: { gte: 1 } },
+          ],
+        },
+        limit: 250,
+        with_payload: true,
+        with_vector: false,
+      };
+      if (nextOffset) body.offset = nextOffset;
 
-    const res = await fetch(`${QDRANT_URL}/collections/faces/points/scroll`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      next: { revalidate: 86400 },
-    });
-
-    const data = await res.json();
-    const points = data.result?.points ?? [];
-    nextOffset = data.result?.next_page_offset ?? null;
-
-    for (const p of points) {
-      const actress_id = p.payload?.actress_id;
-      if (!actress_id || seen.has(actress_id)) continue;
-      seen.add(actress_id);
-      urls.push({
-        url: `${BASE_URL}/actress/${actress_id}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly',
-        priority: 0.8,
+      const res = await fetch(`${QDRANT_URL}/collections/faces/points/scroll`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        next: { revalidate: 86400 },
       });
-    }
-  } while (nextOffset);
+
+      const data = await res.json();
+      const points = data.result?.points ?? [];
+      nextOffset = data.result?.next_page_offset ?? null;
+
+      for (const p of points) {
+        const actress_id = p.payload?.actress_id;
+        if (!actress_id || seen.has(actress_id)) continue;
+        seen.add(actress_id);
+        urls.push({
+          url: `${BASE_URL}/actress/${actress_id}`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.8,
+        });
+      }
+    } while (nextOffset);
+  } catch {
+    // Qdrant障害時はTOPページのみ返す（500エラーでサイトマップ消滅を防ぐ）
+  }
 
   return urls;
 }

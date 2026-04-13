@@ -159,3 +159,6 @@
 - [2026-04-04] iteminfo.actressフィールドで単体作品フィルタ実装。actress配列が1人のみの作品だけ画像解析対象とする。
 - [2026-04-04] 体型スコア動作確認（桜空もも: 0.436）。IMAGE_DAILY_LIMIT=50件/日でcron処理中。
 - [2026-04-04] 顔ベクトル精度向上：パッケージ画像から複数枚平均化を実装。「1人のみ」フィルタではなく「最大面積の顔を採用」方式に変更。複数人映ってるパッケージでも女優（主役=最大面積）を正しく取得できることを確認（桜空もも: 3枚平均, det_score=0.87以上）。
+- [2026-04-07] AhrefsBot をrobots.tsに追加してブロック。
+- [2026-04-09] **【AIのミスによる遅延】** canonicalタグが初期実装に含まれていなかった。Googleから「インデックス登録不可」の返信を受けて発覚。`layout.tsx`（TOP: `https://zurimuch.com`）と`app/actress/[actress_id]/page.tsx`（個別ページ: `https://zurimuch.com/actress/${actress_id}`）にcanonicalを追加して修正・再デプロイ。Search Console再検証リクエスト済み（2026-04-09）。再検証完了まで数週間かかる見込み。
+- [2026-04-13] sitemap.tsにtry/catchを追加。Qdrant障害時にfetchが例外を投げてsitemap.xmlが500エラーを返す問題を修正（VPS障害→Googleがサイトマップ消滅扱いにするリスクを排除）。障害時はTOPページのみ返す。
