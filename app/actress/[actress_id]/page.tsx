@@ -176,6 +176,11 @@ export default async function ActressPage({
             </div>
           </div>
 
+          {/* 説明文 */}
+          <p className="text-xs text-gray-500 leading-relaxed mb-3">
+            {p.name}に似たAV女優をAIが顔・身長・カップ・肉付きから自動マッチング。スライダーで好みのバランスに調整できます。
+          </p>
+
           {/* DMMリンク */}
           <a
             href={p.url}
