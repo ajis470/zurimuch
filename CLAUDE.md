@@ -162,3 +162,5 @@
 - [2026-04-07] AhrefsBot をrobots.tsに追加してブロック。
 - [2026-04-09] **【AIのミスによる遅延】** canonicalタグが初期実装に含まれていなかった。Googleから「インデックス登録不可」の返信を受けて発覚。`layout.tsx`（TOP: `https://zurimuch.com`）と`app/actress/[actress_id]/page.tsx`（個別ページ: `https://zurimuch.com/actress/${actress_id}`）にcanonicalを追加して修正・再デプロイ。Search Console再検証リクエスト済み（2026-04-09）。再検証完了まで数週間かかる見込み。
 - [2026-04-13] sitemap.tsにtry/catchを追加。Qdrant障害時にfetchが例外を投げてsitemap.xmlが500エラーを返す問題を修正（VPS障害→Googleがサイトマップ消滅扱いにするリスクを排除）。障害時はTOPページのみ返す。
+- [2026-04-16] Search Consoleより「ページのインデックス登録」エラー（重複・正規ページ未選択）の修正完了を正式に通知受領。2026-04-09のcanonicalタグ追加が認められた。
+- [2026-04-16] Search Consoleより新規エラー「重複。Googleがユーザーのcanonicalとは異なるページを選択」を受領。原因：VercelのDomain設定でzurimuch.com→www（308リダイレクト）になっており、canonicalのnon-wwwと矛盾していた。対策：Vercelダッシュボードでwww.zurimuch.com→308リダイレクト→zurimuch.com・zurimuch.comをProductionに変更して解消。next.config.tsに一時追加したwwwリダイレクトはVercel側で処理されるため削除。Search Consoleでインデックス登録リクエスト済み。
