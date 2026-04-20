@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description: "簡単直感操作！今自分が好きなAV女優から顔・身長・カップ・肉付き等の重視するポイントを直感的に操作して探している「タイプ」の女優をAIがマッチング。今夜の「オカズ」や新しい「推し」が今すぐ見つかります。",
   metadataBase: new URL("https://zurimuch.com"),
   alternates: {
-    canonical: "https://zurimuch.com",
+    canonical: "https://zurimuch.com/",
   },
   openGraph: {
     siteName: "zurimuch",
