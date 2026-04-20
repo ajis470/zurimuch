@@ -164,3 +164,4 @@
 - [2026-04-13] sitemap.tsにtry/catchを追加。Qdrant障害時にfetchが例外を投げてsitemap.xmlが500エラーを返す問題を修正（VPS障害→Googleがサイトマップ消滅扱いにするリスクを排除）。障害時はTOPページのみ返す。
 - [2026-04-16] Search Consoleより「ページのインデックス登録」エラー（重複・正規ページ未選択）の修正完了を正式に通知受領。2026-04-09のcanonicalタグ追加が認められた。
 - [2026-04-16] Search Consoleより新規エラー「重複。Googleがユーザーのcanonicalとは異なるページを選択」を受領。原因：VercelのDomain設定でzurimuch.com→www（308リダイレクト）になっており、canonicalのnon-wwwと矛盾していた。対策：Vercelダッシュボードでwww.zurimuch.com→308リダイレクト→zurimuch.com・zurimuch.comをProductionに変更して解消。next.config.tsに一時追加したwwwリダイレクトはVercel側で処理されるため削除。Search Consoleでインデックス登録リクエスト済み。
+- [2026-04-20] **【AIのミスによる遅延・3回目】** canonical URLのtrailing slashが抜けていた。`https://zurimuch.com`と`https://zurimuch.com/`はGoogleに別URLとして扱われ、再び「重複。Googleがユーザーのcanonicalとは異なるページを選択」エラーが発生。`layout.tsx`のcanonicalを`https://zurimuch.com/`（末尾スラッシュあり）に修正・再デプロイ（2026-04-20）。この一連のSEOミス（canonical未設定→www矛盾→trailing slash抜け）により約2週間以上インデックス遅延・マネタイズ機会損失が発生。今後のSEO実装では canonical・www統一・trailing slash・リダイレクト方向を必ず一括確認すること。
