@@ -199,6 +199,8 @@ export default async function ActressPage({
       <footer className="text-center py-6">
         <p className="text-xs text-gray-300">
           Powered by <a href="https://affiliate.dmm.com/api/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-400 transition-colors">FANZA Webサービス</a>
+          　｜
+          <Link href="/privacy" className="underline hover:text-gray-400 transition-colors">プライバシーポリシー</Link>
         </p>
       </footer>
     </div>
