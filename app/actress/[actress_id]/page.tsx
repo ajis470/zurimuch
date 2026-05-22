@@ -12,6 +12,12 @@ export const revalidate = 86400; // 24時間ISR
 
 // ---- 型 ----------------------------------------------------------------
 
+type TopTitle = {
+  title: string;
+  url: string;
+  year: string;
+};
+
 type ActressPayload = {
   name: string;
   actress_id: string;
@@ -20,6 +26,7 @@ type ActressPayload = {
   est_bmi: number | null;
   url: string;
   image_url: string | null;
+  top_titles?: TopTitle[];
 };
 
 type QdrantPoint = {
@@ -67,6 +74,7 @@ async function fetchSimilar(pointId: string, actressId: string, vector: number[]
         must_not: [
           { has_id: [pointId] },
           { key: 'actress_id', match: { value: actressId } },
+          { key: 'should_exclude', match: { value: true } },
         ],
       },
       limit: 20,
@@ -191,6 +199,28 @@ export default async function ActressPage({
             DMMで作品を見る
             <span className="text-xs opacity-75">↗</span>
           </a>
+
+          {/* 代表作 */}
+          {p.top_titles && p.top_titles.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-xs font-medium text-gray-400 mb-2">代表作</p>
+              <ul className="space-y-1.5">
+                {p.top_titles.map((work, i) => (
+                  <li key={i}>
+                    <a
+                      href={work.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-rose-500 hover:text-rose-400 transition-colors flex items-start gap-1"
+                    >
+                      <span className="leading-relaxed">{work.title}{work.year ? `（${work.year}）` : ''}</span>
+                      <span className="shrink-0 opacity-60 mt-0.5">↗</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* 類似女優セクション（クライアントコンポーネント） */}

@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
         must_not: [
           { has_id: [pointId] },
           { key: 'actress_id', match: { value: tp.actress_id } },
+          { key: 'should_exclude', match: { value: true } },
         ],
       },
       limit: 2513,
