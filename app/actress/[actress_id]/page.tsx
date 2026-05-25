@@ -280,10 +280,10 @@ export default async function ActressPage({
                       href={work.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-rose-500 hover:text-rose-400 transition-colors flex items-start gap-1"
+                      className="text-xs text-rose-500 hover:text-rose-400 transition-colors flex items-center gap-1 min-w-0"
                     >
-                      <span className="leading-relaxed">{work.title}{work.year ? `（${work.year}）` : ''}</span>
-                      <span className="shrink-0 opacity-60 mt-0.5">↗</span>
+                      <span className="truncate">{work.title}{work.year ? `（${work.year}）` : ''}</span>
+                      <span className="shrink-0 opacity-60">↗</span>
                     </a>
                   </li>
                 ))}
