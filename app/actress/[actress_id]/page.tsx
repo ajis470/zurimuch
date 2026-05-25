@@ -119,7 +119,7 @@ export async function generateMetadata({
     .join('・');
 
   return {
-    title: { absolute: `${p.name}に近いAV女優を直感操作で簡単マッチング｜オカズマッチ` },
+    title: { absolute: `${p.name}に似てるAV女優を直感スライダーでマッチング｜オカズマッチ` },
     description: `${p.name}が好きならこの子も好きなはず！直感操作で顔・身長・カップ・肉付き等の重要ポイントを貴方好みに配分してマッチ可能！今夜のオカズ探しに最適！`,
     alternates: {
       canonical: `https://zurimuch.com/actress/${actress_id}`,
@@ -192,9 +192,25 @@ export default async function ActressPage({
 
   const p = point.payload;
   const initialSimilar = await fetchSimilar(point.id, p.actress_id, point.vector);
+  const description = generateActressDescription(p, initialSimilar);
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: p.name,
+    description,
+    url: `https://zurimuch.com/actress/${p.actress_id}`,
+    ...(p.height && {
+      height: { '@type': 'QuantitativeValue', value: p.height, unitCode: 'CMT' },
+    }),
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-4">
@@ -227,6 +243,7 @@ export default async function ActressPage({
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">{p.name}</h1>
+              <h2 className="text-xs text-gray-400 mt-0.5">{p.name}に似てるAV女優をスライダーでマッチング</h2>
               {/* スペックバッジ */}
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {p.height && <SpecBadge label="身長" value={`${p.height}cm`} />}
@@ -238,7 +255,7 @@ export default async function ActressPage({
 
           {/* 説明文 */}
           <p className="text-xs text-gray-500 leading-relaxed mb-3">
-            {generateActressDescription(p, initialSimilar)}
+            {description}
           </p>
 
           {/* DMMリンク */}
