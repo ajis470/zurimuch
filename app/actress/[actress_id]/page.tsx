@@ -127,6 +127,58 @@ export async function generateMetadata({
   };
 }
 
+// ---- Description generator --------------------------------------------
+
+function generateActressDescription(p: ActressPayload, similar: ScoredPoint[]): string {
+  const heightAdj = p.height !== null
+    ? p.height < 150 ? '超小柄な'
+    : p.height < 155 ? '小柄な'
+    : p.height < 163 ? '標準的な'
+    : p.height < 170 ? 'すらりとした'
+    : '高身長の'
+    : null;
+
+  const heightLabel = p.height !== null
+    ? p.height < 155 ? '低身長'
+    : p.height < 163 ? '標準身長'
+    : '高身長'
+    : null;
+
+  const bmiLabel = p.est_bmi !== null
+    ? p.est_bmi < 18 ? 'スレンダー'
+    : p.est_bmi < 20 ? 'スリム'
+    : p.est_bmi < 22.5 ? 'スタイル抜群'
+    : p.est_bmi < 25 ? 'グラマラス'
+    : 'むちむち'
+    : null;
+
+  const cupStr = p.cup ? `${CUP[p.cup]}カップ` : null;
+
+  const s1Parts: string[] = [];
+  if (heightAdj && p.height) s1Parts.push(`${p.height}cmの${heightAdj}体型`);
+  if (cupStr) s1Parts.push(`${cupStr}という魅力`);
+
+  let s1: string;
+  if (s1Parts.length === 2) {
+    s1 = `${p.name}は${s1Parts[0]}に${s1Parts[1]}を持つ女優です。`;
+  } else if (s1Parts.length === 1) {
+    s1 = `${p.name}は${s1Parts[0]}を持つ女優です。`;
+  } else {
+    s1 = `${p.name}の類似女優をAIがマッチングします。`;
+  }
+
+  const topNames = similar.slice(0, 2).map(s => s.payload.name);
+  let s2 = '';
+  if (topNames.length >= 2) {
+    const tagParts = [heightLabel, bmiLabel].filter(Boolean);
+    const tagStr = tagParts.length > 0 ? `「${tagParts.join('×')}」` : '';
+    const sameStr = tagStr ? `同じ${tagStr}系の特徴を持つ` : '';
+    s2 = `オカズマッチでは${sameStr}${topNames[0]}や${topNames[1]}とのマッチング率が高くなっています。`;
+  }
+
+  return s1 + s2;
+}
+
 // ---- Page --------------------------------------------------------------
 
 export default async function ActressPage({
@@ -186,7 +238,7 @@ export default async function ActressPage({
 
           {/* 説明文 */}
           <p className="text-xs text-gray-500 leading-relaxed mb-3">
-            {p.name}に似たAV女優をAIが顔・身長・カップ・肉付きから自動マッチング。スライダーで好みのバランスに調整できます。
+            {generateActressDescription(p, initialSimilar)}
           </p>
 
           {/* DMMリンク */}
