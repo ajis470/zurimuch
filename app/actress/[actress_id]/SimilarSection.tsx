@@ -92,7 +92,7 @@ function SimilarCard({ actress }: { actress: ScoredPoint }) {
         href={p.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-xs text-rose-500 hover:text-rose-400 font-medium flex items-center justify-center gap-1 transition-colors"
+        className="w-full bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1 transition-colors"
       >
         この女優の作品を探す
         <span aria-hidden>→</span>
