@@ -142,7 +142,7 @@ export default function SimilarSection({
     <section>
       <div className="flex items-center gap-2 mb-4">
         <div className="w-1 h-5 bg-rose-500 rounded-full" />
-        <h2 className="text-sm font-semibold text-gray-800">似た女優</h2>
+        <h2 className="text-sm font-semibold text-gray-800">スライダーで自分の好みを調整</h2>
       </div>
 
       {/* スライダーパネル */}
