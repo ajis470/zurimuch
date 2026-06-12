@@ -43,6 +43,7 @@ type ScoredPoint = {
 
 // ---- Qdrant ヘルパー ---------------------------------------------------
 
+// Qdrant障害時はnullではなくthrow（404ではなく500を返してGoogleに「一時的エラー」と伝えるため）
 async function fetchActressByDmmId(actress_id: string): Promise<QdrantPoint | null> {
   const res = await fetch(`${QDRANT_URL}/collections/faces/points/scroll`, {
     method: 'POST',
@@ -59,44 +60,49 @@ async function fetchActressByDmmId(actress_id: string): Promise<QdrantPoint | nu
   return data.result?.points?.[0] ?? null;
 }
 
+// 類似検索の失敗はページ全体を落とさず空配列で degrade する
 async function fetchSimilar(pointId: string, actressId: string, vector: number[]): Promise<ScoredPoint[]> {
-  const res = await fetch(`${QDRANT_URL}/collections/faces/points/search`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      vector,
-      filter: {
-        must: [
-          { key: 'height',  range: { gte: 1 } },
-          { key: 'cup',     range: { gte: 1 } },
-          { key: 'est_bmi', range: { gte: 1 } },
-        ],
-        must_not: [
-          { has_id: [pointId] },
-          { key: 'actress_id', match: { value: actressId } },
-          { key: 'should_exclude', match: { value: true } },
-        ],
-      },
-      limit: 20,
-      with_payload: true,
-      with_vector: false,
-    }),
-    next: { revalidate: 86400 },
-  });
-  const data = await res.json();
+  try {
+    const res = await fetch(`${QDRANT_URL}/collections/faces/points/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vector,
+        filter: {
+          must: [
+            { key: 'height',  range: { gte: 1 } },
+            { key: 'cup',     range: { gte: 1 } },
+            { key: 'est_bmi', range: { gte: 1 } },
+          ],
+          must_not: [
+            { has_id: [pointId] },
+            { key: 'actress_id', match: { value: actressId } },
+            { key: 'should_exclude', match: { value: true } },
+          ],
+        },
+        limit: 20,
+        with_payload: true,
+        with_vector: false,
+      }),
+      next: { revalidate: 86400 },
+    });
+    const data = await res.json();
 
-  // actress_idで重複排除
-  const seen = new Set<string>();
-  const results: ScoredPoint[] = (data.result ?? []).filter((p: ScoredPoint) => {
-    const id = p.payload.actress_id;
-    if (seen.has(id)) return false;
-    seen.add(id);
-    return true;
-  });
+    // actress_idで重複排除
+    const seen = new Set<string>();
+    const results: ScoredPoint[] = (data.result ?? []).filter((p: ScoredPoint) => {
+      const id = p.payload.actress_id;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
 
-  // トップ結果を100%に正規化
-  const maxScore = results[0]?.score ?? 1;
-  return results.map(p => ({ ...p, score: p.score / maxScore }));
+    // トップ結果を100%に正規化
+    const maxScore = results[0]?.score ?? 1;
+    return results.map(p => ({ ...p, score: p.score / maxScore }));
+  } catch {
+    return [];
+  }
 }
 
 // ---- Metadata ----------------------------------------------------------
@@ -107,24 +113,46 @@ export async function generateMetadata({
   params: Promise<{ actress_id: string }>;
 }) {
   const { actress_id } = await params;
-  const point = await fetchActressByDmmId(actress_id);
-  if (!point) return { title: 'zurimuch' };
 
-  const p = point.payload;
-  const specs = [
-    p.height ? `${p.height}cm` : null,
-    p.cup    ? `${CUP[p.cup]}カップ` : null,
-  ]
-    .filter(Boolean)
-    .join('・');
+  try {
+    const point = await fetchActressByDmmId(actress_id);
+    if (!point) return { title: 'オカズマッチ' };
 
-  return {
-    title: { absolute: `${p.name}に似てるAV女優を直感スライダーでマッチング｜オカズマッチ` },
-    description: `${p.name}が好きならこの子も好きなはず！直感操作で顔・身長・カップ・肉付き等の重要ポイントを貴方好みに配分してマッチ可能！今夜のオカズ探しに最適！`,
-    alternates: {
-      canonical: `https://zurimuch.com/actress/${actress_id}`,
-    },
-  };
+    const p = point.payload;
+    // 本文と同じ動的説明文を使い、全ページでdescriptionをユニーク化（重複コンテンツ対策）
+    const similar = await fetchSimilar(point.id, p.actress_id, point.vector);
+    const description =
+      generateActressDescription(p, similar) +
+      'スライダー直感操作で顔・身長・カップ・肉付きを貴方好みに配分してマッチング！';
+    const title = `${p.name}に似てるAV女優を直感スライダーでマッチング｜オカズマッチ`;
+    const image = toHttps(p.image_url);
+
+    return {
+      title: { absolute: title },
+      description,
+      alternates: {
+        canonical: `https://zurimuch.com/actress/${actress_id}`,
+      },
+      openGraph: {
+        siteName: 'オカズマッチ',
+        locale: 'ja_JP',
+        type: 'profile',
+        url: `https://zurimuch.com/actress/${actress_id}`,
+        title,
+        description,
+        ...(image && { images: [{ url: image, alt: p.name }] }),
+      },
+      twitter: {
+        card: 'summary',
+        title,
+        description,
+        ...(image && { images: [image] }),
+      },
+    };
+  } catch {
+    // Qdrant障害時もmetadata生成では落とさない（ページ本体側が500を返す）
+    return { title: 'オカズマッチ' };
+  }
 }
 
 // ---- Description generator --------------------------------------------
@@ -200,9 +228,19 @@ export default async function ActressPage({
     name: p.name,
     description,
     url: `https://zurimuch.com/actress/${p.actress_id}`,
+    ...(p.image_url && { image: toHttps(p.image_url) }),
     ...(p.height && {
       height: { '@type': 'QuantitativeValue', value: p.height, unitCode: 'CMT' },
     }),
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'オカズマッチ', item: 'https://zurimuch.com/' },
+      { '@type': 'ListItem', position: 2, name: p.name, item: `https://zurimuch.com/actress/${p.actress_id}` },
+    ],
   };
 
   return (
@@ -210,6 +248,10 @@ export default async function ActressPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">

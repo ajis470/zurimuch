@@ -166,3 +166,25 @@
 - [2026-04-16] Search Consoleより新規エラー「重複。Googleがユーザーのcanonicalとは異なるページを選択」を受領。原因：VercelのDomain設定でzurimuch.com→www（308リダイレクト）になっており、canonicalのnon-wwwと矛盾していた。対策：Vercelダッシュボードでwww.zurimuch.com→308リダイレクト→zurimuch.com・zurimuch.comをProductionに変更して解消。next.config.tsに一時追加したwwwリダイレクトはVercel側で処理されるため削除。Search Consoleでインデックス登録リクエスト済み。
 - [2026-04-20] **【AIのミスによる遅延・3回目】** canonical URLのtrailing slashが抜けていた。`https://zurimuch.com`と`https://zurimuch.com/`はGoogleに別URLとして扱われ、再び「重複。Googleがユーザーのcanonicalとは異なるページを選択」エラーが発生。`layout.tsx`のcanonicalを`https://zurimuch.com/`（末尾スラッシュあり）に修正・再デプロイ（2026-04-20）。この一連のSEOミス（canonical未設定→www矛盾→trailing slash抜け）により約2週間以上インデックス遅延・マネタイズ機会損失が発生。今後のSEO実装では canonical・www統一・trailing slash・リダイレクト方向を必ず一括確認すること。
 - [2026-05-09] プライバシーポリシーページ（`app/privacy/page.tsx`）を新規作成・デプロイ。記載内容：アフィリエイト広告（FANZA）による収益開示・GA4アクセス解析・Cookie・個人情報の取り扱い・免責事項。canonical（`https://zurimuch.com/privacy`）設定済み。TOPページ（`app/page.tsx`）と個別女優ページ（`app/actress/[actress_id]/page.tsx`）のフッターに「プライバシーポリシー」テキストリンクを追加。
+- [2026-05-22] 代表作表示機能実装（`backend_enrich.py` + `page.tsx`）。top_titlesフィールドをQdrantに保存し個別女優ページに表示。
+- [2026-05-23] **【AIのミス】** top_titles追加時にbackfillを考慮せず即バッチ実行してしまった。新フィールド追加時は既存データへの影響（backfill量・API負荷）をユーザーに提示してから実装・実行すること。
+- [2026-06-12] SEO・UX一括改修（未デプロイ・ローカルビルド確認済み）：
+  - TOPページSSR化：`page.tsx`をサーバーコンポーネント化（revalidate=3600・Qdrantから12件抽選をHTMLに埋め込み＝内部リンクをクローラーに見せる）。検索UI・更新ボタンは`app/HomeClient.tsx`（新規）に分離。
+  - 個別ページmeta description個別化：`generateActressDescription`の動的文をgenerateMetadataでも使用（テンプレ文による重複コンテンツ対策）。
+  - `<meta name="rating" content="adult">`をlayout.tsxに追加（セーフサーチ向けアダルト宣言）。
+  - OGP整備：layout.tsxにog:url/title/description、個別ページにog（profile型・顔写真image）＋twitterカード追加。
+  - 障害耐性：個別ページのfetchSimilarとgenerateMetadataにtry/catch（Qdrant障害でも類似なしで描画／metadataで落とさない）。TOPのQdrant fetchもtry/catch。
+  - 構造化データ：Personにimage追加・BreadcrumbList（TOP>女優名）新設。
+  - UX：TOP検索を400msデバウンスのインクリメンタル検索化＋fetchエラー処理。スライダーにonKeyUp追加（キーボード操作で再検索）。
+
+## 6. DMM API 大量バッチ禁止ルール（絶対厳守）
+**外部APIを大量に叩くスクリプトを書いたら、実行前に必ず止まれ。理由を考える前に止まれ。**
+
+- **数百件を超えるAPIコールを伴うスクリプトは、書いた後・実行する前に必ずユーザーに提示して承認を得てから実行すること。承認なしの実行を禁止する。**
+- 「問題に気づいたら報告する」では足りない。AIは問題に気づかないまま実行する。だから「実行しようとしたら必ず止まる」という構造的なブレーキを持て。
+- 承認時に提示する内容：
+  1. 対象件数と推定APIコール数
+  2. sleep間隔と推定所要時間
+  3. 同一アカウント（ajis470-991）で別サイトも稼働中のため、そちらへの影響
+  4. 既存の定期バッチ（backend_enrich.py・dmm_auto_sync.py、深夜4時cron）との重複有無
+- DMM APIのレート制限は公式非公開。短時間の大量リクエストでアクセス制限エラーが発生する。安全なsleep値：`1.0秒以上`推奨。

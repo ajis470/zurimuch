@@ -115,17 +115,22 @@ export default function SimilarSection({
 
   const fetchSimilar = useCallback(async (w: Weights) => {
     setLoading(true);
-    const params = new URLSearchParams({
-      id:     pointId,
-      face:   String(w.face),
-      height: String(w.height),
-      cup:    String(w.cup),
-      bmi:    String(w.bmi),
-    });
-    const res = await fetch(`/api/similar?${params}`);
-    const data = await res.json();
-    setSimilar(data.results ?? []);
-    setLoading(false);
+    try {
+      const params = new URLSearchParams({
+        id:     pointId,
+        face:   String(w.face),
+        height: String(w.height),
+        cup:    String(w.cup),
+        bmi:    String(w.bmi),
+      });
+      const res = await fetch(`/api/similar?${params}`);
+      const data = await res.json();
+      setSimilar(data.results ?? []);
+    } catch {
+      // 通信失敗時は直前の結果を維持
+    } finally {
+      setLoading(false);
+    }
   }, [pointId]);
 
   const handleSliderChange = (key: keyof Weights, value: number) => {
@@ -170,6 +175,7 @@ export default function SimilarSection({
                 onChange={(e) => handleSliderChange(key, Number(e.target.value))}
                 onMouseUp={handleSliderCommit}
                 onTouchEnd={handleSliderCommit}
+                onKeyUp={handleSliderCommit}
                 className="flex-1 cursor-pointer"
                 style={{ '--fill': `${weights[key]}%` } as React.CSSProperties}
               />

@@ -24,12 +24,18 @@ export const metadata: Metadata = {
     canonical: "https://zurimuch.com/",
   },
   openGraph: {
-    siteName: "zurimuch",
+    siteName: "オカズマッチ",
     locale: "ja_JP",
     type: "website",
+    url: "https://zurimuch.com/",
+    title: "オカズマッチ｜好きなタイプのAV女優を直感的にマッチング",
+    description: "簡単直感操作！顔・身長・カップ・肉付き等の重視するポイントをスライダーで調整して「タイプ」のAV女優をAIがマッチング。",
   },
   verification: {
     google: "EPCxg9LUgcGcEHXlmFwwcDOrED74R-6gjUt23-KGB5U",
+  },
+  other: {
+    rating: "adult",
   },
 };
 
